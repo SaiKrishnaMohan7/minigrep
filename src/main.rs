@@ -12,6 +12,10 @@ fn main() {
     println!("Search for String: {}", config.query_string);
     println!("In filename: {}", config.filename);
 
+    run(config);
+}
+
+fn run(config: Config) {
     let contents = match fs::read_to_string(config.filename) {
         Ok(file_contents) => file_contents,
         Err(error) => panic!("Error reading file contents {:?}", error)

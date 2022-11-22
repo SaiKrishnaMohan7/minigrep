@@ -8,12 +8,17 @@ pub struct Config {
     pub case_sensitive: bool,
 }
 impl Config {
-    pub fn new(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            return Err("Not enough arguments");
-        }
-        let query_string = args[1].clone();
-        let filename = args[2].clone();
+    pub fn new(mut args: std::env::Args) -> Result<Config, &'static str> {
+        args.next(); // We could have used .skip(1) on line 14 to skip the first entry
+
+        let query_string = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get a query string"),
+        };
+        let filename = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get a filename"),
+        };
 
         let case_sensitive = env::var("CASE_INSENSITIVE").is_err();
 
@@ -42,28 +47,12 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 }
 
 pub fn search_case_sensitive<'a>(query_string: &str, contents: &'a str) -> Vec<&'a str> {
-    let mut result = vec![];
+    contents.lines().filter(|line| line.contains(query_string)).collect()
 
-    for line in contents.lines() {
-        if line.contains(query_string) {
-            result.push(line);
-        }
-    }
-
-    result
 }
 
 pub fn search_case_insensitive<'a>(query_string: &str, contents: &'a str) -> Vec<&'a str>{
-    let query_string = query_string.to_lowercase(); // shadowing
-    let mut results = Vec::new();
-
-    for line in contents.lines(){
-        if line.to_lowercase().contains(&query_string) {
-            results.push(line);
-        }
-    }
-
-    results
+    contents.lines().filter(|line| line.to_lowercase().contains(query_string)).collect()
 }
 
 #[cfg(test)]
